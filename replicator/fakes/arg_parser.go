@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/replicator/replicator"
+	"github.com/dawu415/replicator/replicator"
 )
 
 type ArgParser struct {

@@ -14,7 +14,7 @@ import (
 )
 
 var metadataRegexp = regexp.MustCompile(`metadata\/.*\.yml$`)
-var supportedTiles = []string{"p-isolation-segment", "p-windows-runtime", "pas-windows"}
+var supportedTiles = []string{"p-isolation-segment", "p-windows-runtime", "pas-windows", "mongodb-on-demand"}
 
 const (
 	istRouterJobType  = "isolated_router"
@@ -22,6 +22,8 @@ const (
 	istHAProxyJobType = "isolated_ha_proxy"
 
 	wrtCellJobType = "windows_diego_cell"
+
+	mongoDbJobType = "mongodb_broker"
 )
 
 type TileReplicator struct {
@@ -117,6 +119,8 @@ func (t TileReplicator) Replicate(config ApplicationConfig) error {
 				finalContents = t.replaceWRTProperties(string(contentsYaml), t.formatName(config))
 			} else if tileName == "pas-windows" {
 				finalContents = t.replaceWRTProperties(string(contentsYaml), t.formatName(config))
+			} else if tileName == "mongodb-on-demand" {
+				finalContents = t.replaceMongoDbProperties(string(contentsYaml), t.formatName(config))
 			}
 
 			_, err = dstFile.Write([]byte(finalContents))
@@ -155,6 +159,12 @@ func (TileReplicator) replaceWRTProperties(metadata string, name string) string 
 	newDiegoCellName := fmt.Sprintf("%s_%s", wrtCellJobType, name)
 
 	return strings.Replace(metadata, "windows_diego_cell", newDiegoCellName, -1)
+}
+
+func (TileReplicator) replaceMongoDbProperties(metadata string, name string) string {
+	newMongoBrokerName := fmt.Sprintf("%s_%s", mongoDbJobType, name)
+
+	return strings.Replace(metadata, "mongodb_broker", newMongoBrokerName, -1)
 }
 
 func (TileReplicator) replaceName(originalName string, config ApplicationConfig) (string, error) {

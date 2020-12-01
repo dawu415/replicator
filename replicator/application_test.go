@@ -6,8 +6,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/pivotal-cf/replicator/replicator"
-	"github.com/pivotal-cf/replicator/replicator/fakes"
+	"github.com/dawu415/replicator/replicator"
+	"github.com/dawu415/replicator/replicator/fakes"
 )
 
 var _ = Describe("replicator", func() {

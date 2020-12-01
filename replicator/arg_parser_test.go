@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/pivotal-cf/replicator/replicator"
+	"github.com/dawu415/replicator/replicator"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

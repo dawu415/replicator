@@ -23,7 +23,13 @@ const (
 
 	wrtCellJobType = "windows_diego_cell"
 
-	mongoDbJobType = "mongodb_broker"
+	mongoDbJobType                 = "mongodb_broker"
+	mongoDbDNSAliasesJobType       = "      name: mongodb-dns-aliases"
+	mongoDNSTileAlias              = "mongodb-dns-aliases-tile"
+	mongoDNSDiegoAlias             = "mongodb-dns-aliases-diego"
+	mongoBrokerName                = "broker_name: mongodb-odb"
+	mongoServiceName               = "service_name: mongodb-odb"
+	mongoRuntimeConfigReplaceRegex = `(?s)runtime_configs:.*version: 1.2.6`
 )
 
 type TileReplicator struct {
@@ -120,6 +126,7 @@ func (t TileReplicator) Replicate(config ApplicationConfig) error {
 			} else if tileName == "pas-windows" {
 				finalContents = t.replaceWRTProperties(string(contentsYaml), t.formatName(config))
 			} else if tileName == "mongodb-on-demand" {
+				fmt.Println("This replicator will remove the runtime configuration from this tile. This means this duplicate tile requires the original tile to operate.")
 				finalContents = t.replaceMongoDbProperties(string(contentsYaml), t.formatName(config))
 			}
 
@@ -162,9 +169,24 @@ func (TileReplicator) replaceWRTProperties(metadata string, name string) string 
 }
 
 func (TileReplicator) replaceMongoDbProperties(metadata string, name string) string {
+
 	newMongoBrokerName := fmt.Sprintf("%s_%s", mongoDbJobType, name)
 
-	return strings.Replace(metadata, "mongodb_broker", newMongoBrokerName, -1)
+	newDNSAliasJobName := strings.Replace(mongoDbDNSAliasesJobType, "mongodb", "mongodb-"+name, -1)
+	newDNSTileAliasJobName := strings.Replace(mongoDNSTileAlias, "mongodb", "mongodb-"+name, -1)
+	newDNSDiegoAliasJobName := strings.Replace(mongoDNSDiegoAlias, "mongodb", "mongodb-"+name, -1)
+	newMongoCFBrokerName := strings.Replace(mongoBrokerName, "mongodb-odb", "mongodb-odb-"+name, -1)
+	newMongoServiceName := strings.Replace(mongoServiceName, "mongodb-odb", "mongodb-odb-"+name, -1)
+
+	cellReplacedMetadata := strings.Replace(metadata, mongoDbDNSAliasesJobType, newDNSAliasJobName, -1)
+	cellReplacedMetadata = strings.Replace(cellReplacedMetadata, mongoDNSTileAlias, newDNSTileAliasJobName, -1)
+	cellReplacedMetadata = strings.Replace(cellReplacedMetadata, mongoDNSDiegoAlias, newDNSDiegoAliasJobName, -1)
+	cellReplacedMetadata = strings.Replace(cellReplacedMetadata, mongoBrokerName, newMongoCFBrokerName, -1)
+	cellReplacedMetadata = strings.Replace(cellReplacedMetadata, mongoServiceName, newMongoServiceName, -1)
+
+	var re = regexp.MustCompile(mongoRuntimeConfigReplaceRegex)
+	cellReplacedMetadata = re.ReplaceAllString(cellReplacedMetadata, "runtime_configs: []")
+	return strings.Replace(cellReplacedMetadata, "mongodb_broker", newMongoBrokerName, -1)
 }
 
 func (TileReplicator) replaceName(originalName string, config ApplicationConfig) (string, error) {
